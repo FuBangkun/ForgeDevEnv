@@ -27,16 +27,16 @@ assertProperty 'mod_name'
 
 assertSubProperties 'use_tags', 'tag_class_name'
 assertSubProperties 'use_access_transformer', 'access_transformer_locations'
-assertSubProperties 'use_mixins', 'mixin_booter_version', 'mixin_refmap', 'use_mixin_configs_manifest'
+assertSubProperties 'use_mixins', 'mixin_booter_version', 'mixin_refmap', 'mixin_loading_method'
 assertSubProperties 'is_coremod', 'coremod_includes_mod', 'coremod_plugin_class_name'
 assertSubProperties 'use_asset_mover', 'asset_mover_version'
 
 if (propertyBool('use_mixins')) {
     def loadingMethod = propertyString('mixin_loading_method')
-    if (loadingMethod == 'CONNECTOR_CLASS') {
+    if (loadingMethod == 'connector_class') {
         assertProperty 'mixin_connector_class'
-    } else if (loadingMethod != 'MANIFEST_CONFIGS') {
-        throw new GradleException("Invalid value for 'mixin_loading_method': [${loadingMethod}]. Must be either 'MANIFEST_CONFIGS' or 'CONNECTOR_CLASS'.")
+    } else if (loadingMethod != 'manifest_configs') {
+        throw new GradleException("Invalid value for 'mixin_loading_method': [${loadingMethod}]. Must be either 'manifest_configs' or 'connector_class'.")
     }
 }
 
@@ -227,12 +227,12 @@ jar {
         }
         if (propertyBool('use_mixins')) {
             def loadingMethod = propertyString('mixin_loading_method')
-            if (loadingMethod == 'MANIFEST_CONFIGS') {
+            if (loadingMethod == 'manifest_configs') {
                 def mixinList = propertyStringList('mixin_configs').collect { "mixins.${it}.json" }.join(' ')
                 if (!mixinList.isEmpty()) {
                     attribute_map['MixinConfigs'] = mixinList
                 }
-            } else if (loadingMethod == 'CONNECTOR_CLASS') {
+            } else if (loadingMethod == 'connector_class') {
                 attribute_map['MixinConnector'] = propertyString('mixin_connector_class')
             }
         }
