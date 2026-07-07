@@ -27,9 +27,13 @@ assertProperty 'mod_name'
 
 assertSubProperties 'use_tags', 'tag_class_name'
 assertSubProperties 'use_access_transformer', 'access_transformer_locations'
-assertSubProperties 'use_mixins', 'mixin_booter_version', 'mixin_refmap'
+assertSubProperties 'use_mixins', 'mixin_booter_version', 'mixin_refmap', 'use_mixin_configs_manifest'
 assertSubProperties 'is_coremod', 'coremod_includes_mod', 'coremod_plugin_class_name'
 assertSubProperties 'use_asset_mover', 'asset_mover_version'
+
+if (propertyBool('use_mixins') && !propertyBool('use_mixin_configs_manifest')) {
+    assertProperty 'mixin_connector_class'
+}
 
 setDefaultProperty 'use_modern_java_syntax', false, false
 setDefaultProperty 'use_jetbrains_annotations', false, false
@@ -134,15 +138,10 @@ dependencies {
     }
     if (propertyBool('use_mixins')) {
         String mixin = modUtils.enableMixins("zone.rong:mixinbooter:${propertyString('mixin_booter_version')}", propertyString('mixin_refmap'))
-        api (mixin) {
+        implementation (mixin) {
             transitive = false
         }
-        annotationProcessor 'org.ow2.asm:asm-debug-all:5.2'
-        annotationProcessor 'com.google.guava:guava:32.1.2-jre'
-        annotationProcessor 'com.google.code.gson:gson:2.8.9'
-        annotationProcessor (mixin) {
-            transitive = false
-        }
+        annotationProcessor mixin
     }
     if (propertyBool('enable_junit_testing')) {
         testImplementation 'org.junit.jupiter:junit-jupiter:5.7.1'
@@ -220,6 +219,17 @@ jar {
         }
         if (propertyBool('use_access_transformer')) {
             attribute_map['FMLAT'] = propertyString('access_transformer_locations')
+        }
+
+        if (propertyBool('use_mixins')) {
+            if (propertyBool('use_mixin_configs_manifest')) {
+                def mixinList = propertyStringList('mixin_configs').collect { "mixins.${it}.json" }.join(' ')
+                if (!mixinList.isEmpty()) {
+                    attribute_map['MixinConfigs'] = mixinList
+                }
+            } else {
+                attribute_map['MixinConnector'] = propertyString('mixin_connector_class')
+            }
         }
         attributes(attribute_map)
     }
