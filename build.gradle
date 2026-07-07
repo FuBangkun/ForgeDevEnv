@@ -31,8 +31,13 @@ assertSubProperties 'use_mixins', 'mixin_booter_version', 'mixin_refmap', 'use_m
 assertSubProperties 'is_coremod', 'coremod_includes_mod', 'coremod_plugin_class_name'
 assertSubProperties 'use_asset_mover', 'asset_mover_version'
 
-if (propertyBool('use_mixins') && !propertyBool('use_mixin_configs_manifest')) {
-    assertProperty 'mixin_connector_class'
+if (propertyBool('use_mixins')) {
+    def loadingMethod = propertyString('mixin_loading_method')
+    if (loadingMethod == 'CONNECTOR_CLASS') {
+        assertProperty 'mixin_connector_class'
+    } else if (loadingMethod != 'MANIFEST_CONFIGS') {
+        throw new GradleException("Invalid value for 'mixin_loading_method': [${loadingMethod}]. Must be either 'MANIFEST_CONFIGS' or 'CONNECTOR_CLASS'.")
+    }
 }
 
 setDefaultProperty 'use_modern_java_syntax', false, false
@@ -220,14 +225,14 @@ jar {
         if (propertyBool('use_access_transformer')) {
             attribute_map['FMLAT'] = propertyString('access_transformer_locations')
         }
-
         if (propertyBool('use_mixins')) {
-            if (propertyBool('use_mixin_configs_manifest')) {
+            def loadingMethod = propertyString('mixin_loading_method')
+            if (loadingMethod == 'MANIFEST_CONFIGS') {
                 def mixinList = propertyStringList('mixin_configs').collect { "mixins.${it}.json" }.join(' ')
                 if (!mixinList.isEmpty()) {
                     attribute_map['MixinConfigs'] = mixinList
                 }
-            } else {
+            } else if (loadingMethod == 'CONNECTOR_CLASS') {
                 attribute_map['MixinConnector'] = propertyString('mixin_connector_class')
             }
         }
