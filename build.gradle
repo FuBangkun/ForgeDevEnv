@@ -33,10 +33,12 @@ assertSubProperties 'use_asset_mover', 'asset_mover_version'
 
 if (propertyBool('use_mixins')) {
     def loadingMethod = propertyString('mixin_loading_method')
-    if (loadingMethod == 'connector_class') {
+    if (loadingMethod == 'connector_class' || loadingMethod == 'both') {
         assertProperty 'mixin_connector_class'
     } else if (loadingMethod != 'manifest_configs') {
-        throw new GradleException("Invalid value for 'mixin_loading_method': [${loadingMethod}]. Must be either 'manifest_configs' or 'connector_class'.")
+        throw new GradleException(
+                "Invalid value for 'mixin_loading_method': [${loadingMethod}]. Must be 'manifest_configs', 'connector_class' or 'both'."
+        )
     }
 }
 
@@ -227,12 +229,13 @@ jar {
         }
         if (propertyBool('use_mixins')) {
             def loadingMethod = propertyString('mixin_loading_method')
-            if (loadingMethod == 'manifest_configs') {
+            if (loadingMethod == 'manifest_configs' || loadingMethod == 'both') {
                 def mixinList = propertyStringList('mixin_configs').collect { "mixins.${it}.json" }.join(' ')
                 if (!mixinList.isEmpty()) {
                     attribute_map['MixinConfigs'] = mixinList
                 }
-            } else if (loadingMethod == 'connector_class') {
+            }
+            if (loadingMethod == 'connector_class' || loadingMethod == 'both') {
                 attribute_map['MixinConnector'] = propertyString('mixin_connector_class')
             }
         }
